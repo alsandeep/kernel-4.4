@@ -24,7 +24,7 @@
 #include <asm/hardware/cache-l2x0.h>
 
 static const char * const owl_common_board_dt_compat[] = {
-	"actions,atm7059",
+	"actions,atm7059a",
 	NULL,
 };
 
