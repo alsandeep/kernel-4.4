@@ -1,0 +1,22 @@
+menuconfig ARCH_OWL
+	bool "Actions SoCs" if ARCH_MULTI_V7
+	select GENERIC_IRQ_CHIP
+	select ARCH_REQUIRE_GPIOLIB
+	select PINCTRL
+	select USE_OF
+	select NEON
+	select VFP
+	select ARM_GIC
+	select ARM_GLOBAL_TIMER
+	select HAVE_ARM_ARCH_TIMER
+	select HAVE_ARM_SCU if SMP
+	select HAVE_ARM_TWD if SMP
+	select HAVE_SMP
+	select VIRT_TO_BUS
+	select CACHE_L2X0
+	select CLKSRC_MMIO
+	select CLKDEV_LOOKUP
+	select CLKSRC_ARM_GLOBAL_TIMER_SCHED_CLOCK
+        help
+	  Support for Actions Owl's Cortex-A9 Quad-Core-SoCs
+	  containing the ATM7039, ATM7059 series.
