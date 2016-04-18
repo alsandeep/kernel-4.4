@@ -101,7 +101,7 @@
 
 	global_timer: global-timer@b0020200 {
 		compatible = "arm,cortex-a9-global-timer";
-		interrupt-parent = <&gic>;
+		interrupt-parent = <&intc>;
 		reg = <0xb0020200 0x100>;
 		interrupts = <GIC_PPI 11 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_HIGH)>;
 		clocks = <&clk_periph>;
@@ -109,19 +109,12 @@
 
 	local_timer: local-timer@b0020600 {
 		compatible = "arm,cortex-a9-twd-timer";
-		interrupt-parent = <&gic>;
+		interrupt-parent = <&intc>;
 		reg = <0xb0020600 0x100>;
 		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_HIGH)>;
 		clocks = <&clk_periph>;
 	};
 
-	gic: interrupt-controller@b0021000 {
-		compatible = "arm,cortex-a9-gic";
-		interrupt-controller;
-		#interrupt-cells = <3>;
-		reg = <0xb0021000 0x1000>,
-		      <0xb0020100 0x0100>;
-	};
 	clocks {
 		#address-cells = <1>;
 		#size-cells = <0>;
@@ -157,7 +150,7 @@
 
 	uart3: serial@b0126000 {
 		compatible = "actions,atm7039-uart";
-		interrupt-parent = <&gic>;
+		interrupt-parent = <&intc>;
 		reg-io-width = <4>;
 		reg = <0xb0126000 0x10>;
 		interrupts = < GIC_SPI 32 IRQ_TYPE_LEVEL_HIGH >;
