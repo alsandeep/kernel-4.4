@@ -17,6 +17,8 @@ menuconfig ARCH_OWL
 	select CLKSRC_MMIO
 	select CLKDEV_LOOKUP
 	select CLKSRC_ARM_GLOBAL_TIMER_SCHED_CLOCK
+	select PINCTRL_OWL
+	select GPIO_OWL
         help
 	  Support for Actions Owl's Cortex-A9 Quad-Core-SoCs
 	  containing the ATM7039, ATM7059 series.

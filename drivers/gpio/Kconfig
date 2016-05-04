@@ -323,6 +323,12 @@ config GPIO_OMAP
 	help
 	  Say yes here to enable GPIO support for TI OMAP SoCs.
 
+config GPIO_OWL 
+       tristate "OWL pin controller driver"
+	default y if ARCH_OWL
+       help
+	  Say yes here to enable GPIO support for Actions Owl SoCs.
+
 config GPIO_PL061
 	bool "PrimeCell PL061 GPIO support"
 	depends on ARM_AMBA
