@@ -18,6 +18,7 @@
 #define __ASM_ARCH_HARDWARE_H
 
 #include <linux/types.h>
+#include <mach/regs_map-atm7039.h>
 
 #define OWL_SDRAM_BASE			UL(0x00000000)
 #define OWL_IO_DEVICE_BASE		UL(0xB0000000)
@@ -55,5 +56,68 @@
 
 #define OWL_PA_BOOT_RAM		(0xFFFF8000)
 #define OWL_VA_BOOT_RAM		(0xFFFF8000)
+#ifndef __ASSEMBLY__
+/******************************************************************************/
+static inline void act_writeb(u8 val, u32 reg)
+{
+	*(volatile u8 *)(IO_ADDRESS(reg)) = val;
+}
+
+static inline void act_writew(u16 val, u32 reg)
+{
+	*(volatile u16 *)(IO_ADDRESS(reg)) = val;
+}
+
+static inline void act_writel(u32 val, u32 reg)
+{
+	*(volatile u32 *)(IO_ADDRESS(reg)) = val;
+}
+/******************************************************************************/
+static inline u8 act_readb(u32 reg)
+{
+	return *(volatile u8 *)IO_ADDRESS(reg);
+}
+
+static inline u16 act_readw(u32 reg)
+{
+	return *(volatile u16 *)IO_ADDRESS(reg);
+}
+
+static inline u32 act_readl(u32 reg)
+{
+	return *(volatile u32 *)IO_ADDRESS(reg);
+}
+/******************************************************************************/
+static inline void act_setb(u8 val, u32 reg)
+{
+	*(volatile u8 *)IO_ADDRESS(reg) |= val;
+}
+
+static inline void act_setw(u16 val, u32 reg)
+{
+	*(volatile u16 *)IO_ADDRESS(reg) |= val;
+}
+
+static inline void act_setl(u32 val, u32 reg)
+{
+	*(volatile u32 *)IO_ADDRESS(reg) |= val;
+}
+/******************************************************************************/
+static inline void act_clearb(u8 val, u32 reg)
+{
+	*(volatile u8 *)IO_ADDRESS(reg) &= ~val;
+}
+
+static inline void act_clearw(u16 val, u32 reg)
+{
+	*(volatile u16 *)IO_ADDRESS(reg) &= ~val;
+}
+
+static inline void act_clearl(u32 val, u32 reg)
+{
+	*(volatile u32 *)IO_ADDRESS(reg) &= ~val;
+}
+/******************************************************************************/
+#endif
 
 #endif /* __ASM_ARCH_HARDWARE_H */

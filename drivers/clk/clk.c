@@ -1268,7 +1268,7 @@ out:
 	return ret;
 }
 
-static void clk_calc_subtree(struct clk_core *core, unsigned long new_rate,
+void clk_calc_subtree(struct clk_core *core, unsigned long new_rate,
 			     struct clk_core *new_parent, u8 p_index)
 {
 	struct clk_core *child;
@@ -2526,6 +2526,7 @@ struct clk *clk_register(struct device *dev, struct clk_hw *hw)
 	int i, ret;
 	struct clk_core *core;
 
+	printk("CEM DEBUG %s:%d name:%s\n", __func__, __LINE__, hw->init->name);
 	core = kzalloc(sizeof(*core), GFP_KERNEL);
 	if (!core) {
 		ret = -ENOMEM;

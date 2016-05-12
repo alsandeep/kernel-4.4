@@ -22,6 +22,7 @@
 #include <asm/mach/arch.h>
 #include <asm/mach/map.h>
 #include <asm/hardware/cache-l2x0.h>
+#include "owl.h"
 
 static const char * const owl_common_board_dt_compat[] = {
 	"actions,atm7059a",
@@ -31,5 +32,6 @@ static const char * const owl_common_board_dt_compat[] = {
 DT_MACHINE_START(LIGER, "actions Cortex-A9 (Device Tree)")
 	.l2c_aux_val	= 0,
 	.l2c_aux_mask	= ~0,
+	.map_io		= owl_map_io,
 	.dt_compat	= owl_common_board_dt_compat,
 MACHINE_END

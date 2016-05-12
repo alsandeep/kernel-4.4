@@ -7,4 +7,5 @@
 
 ccflags-$(CONFIG_ARCH_MULTIPLATFORM) := -I$(srctree)/$(src)/include
 
-obj-$(CONFIG_ARCH_OWL) += owl.o
+obj-$(CONFIG_ARCH_OWL) 	+= owl.o
+obj-$(CONFIG_ARCH_OWL) 	+= cpu-owl.o s500-clocktree.o  clocktree-owl.o 
