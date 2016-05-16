@@ -65,6 +65,14 @@ config AMBA_PL08X
 	  Platform has a PL08x DMAC device
 	  which can provide DMA engine support
 
+config OWL_DMAC
+	tristate "OWL AHB DMA support"
+	depends on ARCH_OWL
+	select DMA_ENGINE
+	help
+	  Support the actions AHB DMA controller.
+
+
 config AMCC_PPC440SPE_ADMA
 	tristate "AMCC PPC440SPe ADMA support"
 	depends on 440SPe || 440SP

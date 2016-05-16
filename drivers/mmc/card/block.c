@@ -41,10 +41,12 @@
 #include <linux/mmc/host.h>
 #include <linux/mmc/mmc.h>
 #include <linux/mmc/sd.h>
+#include <linux/mmc/bootdev.h>
 
 #include <asm/uaccess.h>
 
 #include "queue.h"
+#include "./../host/gl520x_mmc.h"
 
 MODULE_ALIAS("mmc:block");
 
@@ -1093,7 +1095,10 @@ static int mmc_blk_reset(struct mmc_blk_data *md, struct mmc_host *host,
 			 int type)
 {
 	int err;
+	 err= sd_mmc_reinit(host);
+	 return err;
 
+#if 0
 	if (md->reset_done & type)
 		return -EEXIST;
 
@@ -1116,6 +1121,7 @@ static int mmc_blk_reset(struct mmc_blk_data *md, struct mmc_host *host,
 		}
 	}
 	return err;
+#endif	
 }
 
 static inline void mmc_blk_reset_success(struct mmc_blk_data *md, int type)
@@ -2006,7 +2012,8 @@ static int mmc_blk_issue_rw_rq(struct mmc_queue *mq, struct request *rqc)
 			}
 			break;
 		case MMC_BLK_CMD_ERR:
-			ret = mmc_blk_cmd_err(md, card, brq, req, ret);
+			printk(KERN_INFO "CEM DEBUG MMC_BLK_CMD_ERR:retry %s:%d\n",__FUNCTION__,__LINE__);
+			//ret = mmc_blk_cmd_err(md, card, brq, req, ret);
 			if (mmc_blk_reset(md, card->host, type))
 				goto cmd_abort;
 			if (!ret)
@@ -2014,25 +2021,33 @@ static int mmc_blk_issue_rw_rq(struct mmc_queue *mq, struct request *rqc)
 			break;
 		case MMC_BLK_RETRY:
 			retune_retry_done = brq->retune_retry_done;
-			if (retry++ < 5)
+			if (retry++ < 16){
+				printk(KERN_INFO "MMC_BLK_RETRY:retry:%d: %s:%d\n",retry,__FUNCTION__,__LINE__);
 				break;
+			}
 			/* Fall through */
 		case MMC_BLK_ABORT:
+			printk(KERN_INFO "MMC_BLK_ABORT:retry %s:%d\n",__FUNCTION__,__LINE__);
 			if (!mmc_blk_reset(md, card->host, type))
 				break;
+			printk("!!!!err cmd_abort:%s:%d\n",__FUNCTION__,__LINE__);	
 			goto cmd_abort;
 		case MMC_BLK_DATA_ERR: {
 			int err;
 
 			err = mmc_blk_reset(md, card->host, type);
+			printk("MMC_BLK_DATA_ERR:retry %s:%d\n",__FUNCTION__,__LINE__);
 			if (!err)
 				break;
 			if (err == -ENODEV ||
-				mmc_packed_cmd(mq_rq->cmd_type))
+				mmc_packed_cmd(mq_rq->cmd_type)){
+				printk("!!!!err cmd_abort:%s:%d\n",__FUNCTION__,__LINE__);	
 				goto cmd_abort;
+			}
 			/* Fall through */
 		}
 		case MMC_BLK_ECC_ERR:
+			printk("MMC_BLK_ECC_ERR:retry %s:%d\n",__FUNCTION__,__LINE__);
 			if (brq->data.blocks > 1) {
 				/* Redo read one sector at a time */
 				pr_warn("%s: retrying using single block read\n",
@@ -2051,17 +2066,21 @@ static int mmc_blk_issue_rw_rq(struct mmc_queue *mq, struct request *rqc)
 				goto start_new_req;
 			break;
 		case MMC_BLK_NOMEDIUM:
+			printk("!!!!err cmd_abort:%s:%d\n",__FUNCTION__,__LINE__);	
 			goto cmd_abort;
 		default:
 			pr_err("%s: Unhandled return value (%d)",
 					req->rq_disk->disk_name, status);
+			printk("!!!!err cmd_abort:%s:%d\n",__FUNCTION__,__LINE__);	
 			goto cmd_abort;
 		}
 
 		if (ret) {
 			if (mmc_packed_cmd(mq_rq->cmd_type)) {
-				if (!mq_rq->packed->retries)
+				if (!mq_rq->packed->retries){
+					printk("cmd_abort:%s:%d\n",__FUNCTION__,__LINE__);	
 					goto cmd_abort;
+				}
 				mmc_blk_packed_hdr_wrq_prep(mq_rq, card, mq);
 				mmc_start_req(card->host,
 					      &mq_rq->mmc_active, NULL);
@@ -2187,6 +2206,10 @@ static struct mmc_blk_data *mmc_blk_alloc_req(struct mmc_card *card,
 {
 	struct mmc_blk_data *md;
 	int devidx, ret;
+	int boot_dev;
+	struct gl520xmmc_host *hcd;
+
+    hcd = mmc_priv(card->host);
 
 	devidx = find_first_zero_bit(dev_use, max_devices);
 	if (devidx >= max_devices)
@@ -2206,8 +2229,17 @@ static struct mmc_blk_data *mmc_blk_alloc_req(struct mmc_card *card,
 	 * index anymore so we keep track of a name index.
 	 */
 	if (!subname) {
-		md->name_idx = find_first_zero_bit(name_use, max_devices);
+		//md->name_idx = find_first_zero_bit(name_use, max_devices);
+		__set_bit(0, name_use);
+		boot_dev = owl_get_boot_dev();
+		if(boot_dev > 0 && (boot_dev - OWL_BOOTDEV_SD0 == hcd->id)){
+			md->name_idx = 0;
+		} else {
+			md->name_idx = find_first_zero_bit(name_use, max_devices);
+		}
 		__set_bit(md->name_idx, name_use);
+		
+		printk("## md->name_idx: %d\n", md->name_idx);
 	} else
 		md->name_idx = ((struct mmc_blk_data *)
 				dev_to_disk(parent)->private_data)->name_idx;
@@ -2669,7 +2701,7 @@ static SIMPLE_DEV_PM_OPS(mmc_blk_pm_ops, mmc_blk_suspend, mmc_blk_resume);
 
 static struct mmc_driver mmc_driver = {
 	.drv		= {
-		.name	= "mmcblk",
+		.name	= "sd_card",
 		.pm	= &mmc_blk_pm_ops,
 	},
 	.probe		= mmc_blk_probe,

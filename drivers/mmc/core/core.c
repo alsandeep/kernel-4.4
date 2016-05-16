@@ -45,6 +45,7 @@
 #include "mmc_ops.h"
 #include "sd_ops.h"
 #include "sdio_ops.h"
+#include "../host/gl520x_mmc.h"
 
 /* If the device is not responding */
 #define MMC_CORE_TIMEOUT_MS	(10 * 60 * 1000) /* 10 minute timeout */
@@ -1562,7 +1563,7 @@ int mmc_set_signal_voltage(struct mmc_host *host, int signal_voltage, u32 ocr)
 {
 	struct mmc_command cmd = {0};
 	int err = 0;
-	u32 clock;
+	//u32 clock;
 
 	BUG_ON(!host);
 
@@ -1607,9 +1608,9 @@ int mmc_set_signal_voltage(struct mmc_host *host, int signal_voltage, u32 ocr)
 	 * During a signal voltage level switch, the clock must be gated
 	 * for 5 ms according to the SD spec
 	 */
-	clock = host->ios.clock;
-	host->ios.clock = 0;
-	mmc_set_ios(host);
+	//clock = host->ios.clock;
+	//host->ios.clock = 0;
+	//mmc_set_ios(host);
 
 	if (__mmc_set_signal_voltage(host, signal_voltage)) {
 		/*
@@ -1622,8 +1623,8 @@ int mmc_set_signal_voltage(struct mmc_host *host, int signal_voltage, u32 ocr)
 
 	/* Keep clock gated for at least 10 ms, though spec only says 5 ms */
 	mmc_delay(10);
-	host->ios.clock = clock;
-	mmc_set_ios(host);
+	//host->ios.clock = clock;
+	//mmc_set_ios(host);
 
 	/* Wait for at least 1 ms according to spec */
 	mmc_delay(1);
@@ -1632,8 +1633,8 @@ int mmc_set_signal_voltage(struct mmc_host *host, int signal_voltage, u32 ocr)
 	 * Failure to switch is indicated by the card holding
 	 * dat[0:3] low
 	 */
-	if (host->ops->card_busy && host->ops->card_busy(host))
-		err = -EAGAIN;
+	//if (host->ops->card_busy && host->ops->card_busy(host))
+	//	err = -EAGAIN;
 
 power_cycle:
 	if (err) {
@@ -2566,6 +2567,8 @@ void mmc_rescan(struct work_struct *work)
 	struct mmc_host *host =
 		container_of(work, struct mmc_host, detect.work);
 	int i;
+	struct gl520xmmc_host *owl_host;
+	owl_host = mmc_priv(host);
 
 	if (host->trigger_card_event && host->ops->card_event) {
 		host->ops->card_event(host);
@@ -2629,9 +2632,26 @@ void mmc_rescan(struct work_struct *work)
 	mmc_release_host(host);
 
  out:
-	if (host->caps & MMC_CAP_NEEDS_POLL)
+	if ((host->caps & MMC_CAP_NEEDS_POLL)
+#ifdef CONFIG_EARLYSUSPEND
+		&&(!(owl_host->mmc_early_suspend))
+#endif
+		)
 		mmc_schedule_delayed_work(&host->detect, HZ);
 }
+void cancel_mmc_work(struct mmc_host *host )
+{
+
+}
+EXPORT_SYMBOL(cancel_mmc_work);
+
+
+void start_mmc_work(struct mmc_host *host )
+{
+	mmc_schedule_delayed_work(&host->detect, HZ/4);
+}
+
+EXPORT_SYMBOL(start_mmc_work);
 
 void mmc_start_host(struct mmc_host *host)
 {
@@ -2759,6 +2779,18 @@ int mmc_flush_cache(struct mmc_card *card)
 }
 EXPORT_SYMBOL(mmc_flush_cache);
 
+int sd_mmc_reinit(struct mmc_host *host)
+{
+	int err = 0;
+	BUG_ON( !(host->bus_ops && !host->bus_dead)) ;
+	mmc_power_off(host);
+	mmc_power_up(host, host->card->ocr);
+	mmc_select_voltage(host, host->card->ocr);
+	BUG_ON(!host->bus_ops->resume);
+	err = host->bus_ops->resume(host);
+	return err;
+}
+EXPORT_SYMBOL(sd_mmc_reinit);
 #ifdef CONFIG_PM
 
 /* Do the card removal on suspend if card is assumed removeable

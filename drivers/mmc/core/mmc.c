@@ -1545,7 +1545,7 @@ static int mmc_init_card(struct mmc_host *host, u32 ocr,
 	/*
 	 * Enable power_off_notification byte in the ext_csd register
 	 */
-	if (card->ext_csd.rev >= 6) {
+	if (card->ext_csd.rev >= 7) {
 		err = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
 				 EXT_CSD_POWER_OFF_NOTIFICATION,
 				 EXT_CSD_POWER_ON,
@@ -1658,6 +1658,7 @@ static int mmc_init_card(struct mmc_host *host, u32 ocr,
 	if (!oldcard)
 		host->card = card;
 
+	printk("%s:ok\n",__FUNCTION__);
 	return 0;
 
 free_card:
@@ -2044,9 +2045,12 @@ int mmc_attach_mmc(struct mmc_host *host)
 	 * Detect and init the card.
 	 */
 	err = mmc_init_card(host, rocr, NULL);
-	if (err)
+	if (err){
+		printk("emmc init fail\n");
 		goto err;
+	}
 
+	printk("emmc init ok\n");
 	mmc_release_host(host);
 	err = mmc_add_card(host->card);
 	if (err)
