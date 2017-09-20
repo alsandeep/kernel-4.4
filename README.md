@@ -4,11 +4,11 @@ Kernel 4.4
 Steps:
 1) dowloaded from linux distro kernel-4.4
 
-v4.4 commit
-commit afd2ff9b7e1b367172f18ba7f693dfb62bdcb2dc
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Sun Jan 10 15:01:32 2016 -0800
------------
+   v4.4 commit
+   commit afd2ff9b7e1b367172f18ba7f693dfb62bdcb2dc
+   Author: Linus Torvalds <torvalds@linux-foundation.org>
+   Date:   Sun Jan 10 15:01:32 2016 -0800
+   -----------
 
 2) apply patch from http://dev.linux-xapple.org/~dennis/4.4.x-porting/
    kernel_patches_v4.4.tar.bz2
